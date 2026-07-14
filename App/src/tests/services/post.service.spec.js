@@ -41,7 +41,7 @@ describe('PostService', () => {
             pessoaRepositoryMock.buscarPorId
                 .mockResolvedValue({
                     id_pessoa: 1,
-                    codigo: 'P'
+                    codigo_tipo_pessoa: 'P'
                 });
 
             const post = {
@@ -83,7 +83,7 @@ describe('PostService', () => {
             pessoaRepositoryMock.buscarPorId
                 .mockResolvedValue({
                     id_pessoa: 2,
-                    codigo: 'A'
+                    codigo_tipo_pessoa: 'A'
                 });
 
             const post = {

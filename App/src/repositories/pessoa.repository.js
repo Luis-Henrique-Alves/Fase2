@@ -13,7 +13,7 @@ class PessoaRepository extends IPessoaRepository {
                 p.id_pessoa,
                 p.nome_pessoa,
                 p.id_tipo_pessoa,
-                tp.codigo
+                tp.codigo_tipo_pessoa
             FROM pessoa p
             INNER JOIN tipo_pessoa tp
             ON tp.id_tipo_pessoa = p.id_tipo_pessoa

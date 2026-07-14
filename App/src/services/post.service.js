@@ -70,7 +70,7 @@ class PostService extends IPostService {
 
         }
 
-        if (pessoa.codigo !== 'P') {
+        if (pessoa.codigo_tipo_pessoa !== 'P') {
 
             throw new AppError(
                 'Apenas professores podem criar posts. :)',
