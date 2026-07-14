@@ -1,0 +1,286 @@
+openapi: 3.1.0
+
+info:
+  title: API de Posts
+  description: API REST para entrega módulo 2 FIAP.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+
+
+tags:
+
+  - name: Posts
+    description: Operações relacionadas aos posts
+
+
+paths:
+  /posts:
+    get:
+      tags:
+        - Posts
+      summary: Lista todos os posts
+      description: Retorna todos os posts ativos.
+      responses:
+        "200":
+          description: Lista de posts.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Posts
+      summary: Cria um novo post
+      description: |
+        Cria um novo post.
+
+        Apenas usuários com tipo_perfil = P
+        (Professor) possuem permissão para criar posts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePost"
+
+      responses:
+        "201":
+          description: Post criado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponse"
+
+        "403":
+          description: Usuário sem permissão para criar posts.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: Apenas professores podem criar posts. :)
+
+        "404":
+          description: Usuário criador não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: Usuário não encontrado
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /posts/search:
+    get:
+      tags:
+
+        - Posts
+      summary: Pesquisa posts
+      description: Pesquisa posts pelo título ou conteúdo.
+      parameters:
+        - name: text
+          in: query
+          required: true
+          description: Texto utilizado na pesquisa.
+          schema:
+            type: string
+            example: tecnologia
+      responses:
+        "200":
+          description: Resultado da pesquisa.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /posts/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Busca post por ID
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+
+      responses:
+        "200":
+          description: Post encontrado.
+          content:
+            application/json:
+              schema:
+
+                $ref: "#/components/schemas/PostResponse"
+
+        "404":
+          $ref: "#/components/responses/PostNotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    put:
+      tags:
+        - Posts
+      summary: Atualiza um post
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePost"
+      responses:
+        "200":
+          description: Post atualizado.
+          content:
+            application/json:
+              schema:
+
+                $ref: "#/components/schemas/PostResponse"
+
+        "404":
+          $ref: "#/components/responses/PostNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - Posts
+
+      summary: Remove um post
+      description: Executa remoção lógica do post.
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      responses:
+        "204":
+          description: Post removido com sucesso.
+
+        "404":
+          $ref: "#/components/responses/PostNotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  parameters:
+    PostId:
+      name: id
+      in: path
+      required: true
+      description: Identificador do post.
+      schema:
+        type: integer
+
+
+        example: 1
+
+  schemas:
+    Post:
+      type: object
+      properties:
+        idPost:
+          type: integer
+          example: 1
+        titulo:
+          type: string
+          example: Meu primeiro post
+        conteudo:
+          type: string
+          example: Conteúdo do post.
+        criadoPor:
+          type: integer
+          example: 10
+        dataCriacao:
+          type: string
+          format: date-time
+          example: "2026-07-13T18:00:00.000Z"
+        isDeleted:
+          type: boolean
+          example: false
+    CreatePost:
+      type: object
+      required:
+        - titulo
+        - conteudo
+        - criadoPor
+      properties:
+        titulo:
+          type: string
+          example: Meu primeiro post
+        conteudo:
+          type: string
+          example: Conteúdo completo do post.
+        criadoPor:
+          type: integer
+          description: ID do usuário criador. Deve possuir tipo_perfil P.
+          example: 10
+
+    UpdatePost:
+      type: object
+
+      required:
+        - titulo
+        - conteudo
+      properties:
+        titulo:
+          type: string
+          example: Novo título
+        conteudo:
+          type: string
+          example: Novo conteúdo
+    PostResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: "#/components/schemas/Post"
+    PostListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Apenas professores podem criar posts. :)
+  responses:
+    PostNotFound:
+      description: Post não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            message: Post não encontrado
+
+    InternalServerError:
+      description: Erro interno do servidor.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            message: Erro interno do servidor

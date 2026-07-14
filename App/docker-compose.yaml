@@ -1,0 +1,25 @@
+services:
+
+  postgres:
+
+    image: postgres:17
+
+    container_name: postgres_api
+
+    restart: always
+
+    ports:
+      - "5432:5432"
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: post_app
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/config/database-init.sql:/docker-entrypoint-initdb.d/database-init.sql
+
+volumes:
+
+  postgres_data:
