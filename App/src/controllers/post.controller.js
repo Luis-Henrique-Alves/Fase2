@@ -127,7 +127,7 @@ class PostController {
 
     async adicionarComentario(req, res, next) {
         try {
-            const { id } = req.params; // id do post
+            const { id } = req.params; 
             const { conteudo, idUsuario } = req.body;
 
             const comentario = await postService.adicionarComentario(id, conteudo, idUsuario);

@@ -1,7 +1,6 @@
 const validate = require('../middlewares/validate.middleware');
 const express = require('express');
-
-const router = express.Router();
+const { authMiddleware } = require('../middlewares/auth.middleware'); 
 const postController = require('../controllers/post.controller');
 
 const {
@@ -9,20 +8,14 @@ const {
   updatePostSchema
 } = require('../schemas/post.schema');
 
-router.get(
-  '/',
-  postController.listar
-);
+const router = express.Router();
 
-router.get(
-  '/search',
-  postController.search
-);
+router.use(authMiddleware);
 
-router.get(
-  '/:id',
-  postController.buscarPorId
-);
+router.get('/search', postController.search);
+router.get('/:id', postController.buscarPorId);
+
+router.get('/', postController.listar);
 
 router.post(
   '/',
@@ -36,16 +29,12 @@ router.put(
   postController.atualizar
 );
 
-router.delete(
-  '/:id',
-  postController.remover
-);
+router.delete('/:id', postController.remover);
 
-router.post(
-  '/:id/comentarios',
-  postController.adicionarComentario
-);
+router.post('/:id/comentarios', postController.adicionarComentario);
+
 router.put('/comentarios/:idComentario', postController.atualizarComentario);
 
 router.delete('/comentarios/:idComentario', postController.removerComentario);
+
 module.exports = router;
