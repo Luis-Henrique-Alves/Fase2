@@ -7,53 +7,58 @@ const PostMapper = require('../mappers/post.mapper');
 
 
 class PostRepository extends IPostRepository {
+   async listar(page = 1, limit = 10) {
+    const offset = (page - 1) * limit;
 
-    async listar() {
+    const query = `
+      SELECT
+        pt.id_post,
+        pt.titulo,
+        pt.conteudo,
+        p.nome_pessoa AS nome_criador,
+        pt.data_criacao,
+        pt.data_ultima_alteracao
+      FROM post pt
+      INNER JOIN pessoa p
+        ON p.id_pessoa = pt.criado_por
+      WHERE pt.is_deleted = FALSE
+      ORDER BY pt.data_criacao DESC
+      LIMIT $1 OFFSET $2;
+    `;
 
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM post pt
+      WHERE pt.is_deleted = FALSE;
+    `;
 
-        const query = `
-            SELECT
-                pt.id_post,
-                pt.titulo,
-                pt.conteudo,
-                pt.criado_por,
-                p.nome_pessoa AS nome_criador,
-                pt.data_criacao,
-                pt.is_deleted
-            FROM post pt
-            INNER JOIN pessoa p
-            ON p.id_pessoa = pt.criado_por
-            WHERE pt.is_deleted = FALSE
-            ORDER BY pt.data_criacao DESC;
-        `;
+    const result = await pool.query(query, [limit, offset]);
+    const countResult = await pool.query(countQuery);
 
-        const result = await pool.query(query);
-
-
-        return result.rows.map(
-            PostMapper.toModel
-        );
-
-    }
-
+    return {
+      posts: result.rows,
+      total: Number(countResult.rows[0].total),
+    };
+  }
 
     async buscarPorId(idPost) {
 
 
         const query = `
-            SELECT
-                pt.id_post,
-                pt.titulo,
-                pt.conteudo,
-                pt.criado_por,
-                p.nome_pessoa AS nome_criador,
-                pt.data_criacao,
-                pt.is_deleted
-            FROM post pt
-            INNER JOIN pessoa p
-            ON p.id_pessoa = pt.criado_por
-            WHERE pt.id_post = $1
-            AND pt.is_deleted = FALSE;
+          SELECT
+    pt.id_post,
+    pt.titulo,
+    pt.conteudo,
+    u.id_usuario as criado_por,
+    p.id_pessoa,
+    p.nome_pessoa AS nome_criador,
+    pt.data_criacao,
+    pt.is_deleted
+FROM post pt
+INNER JOIN usuario u ON u.id_usuario = pt.criado_por
+INNER JOIN pessoa p ON p.id_pessoa = u.id_pessoa
+WHERE pt.id_post = $1 AND 
+pt.is_deleted = FALSE;
         `;
 
         const result = await pool.query(
@@ -156,39 +161,56 @@ class PostRepository extends IPostRepository {
 
     }
 
-    async search(text) {
+    async search(text, page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+
         const query = `
-            SELECT
-                pt.id_post,
-                pt.titulo,
-                pt.conteudo,
-                pt.criado_por,
-                p.nome_pessoa AS nome_criador,
-                pt.data_criacao,
-                pt.is_deleted
-            FROM post pt
-            INNER JOIN pessoa p
-            ON p.id_pessoa = pt.criado_por
-            WHERE pt.is_deleted = FALSE
-            AND
-            (
-                pt.titulo ILIKE $1
-                OR
-                pt.conteudo ILIKE $1
-            )
-            ORDER BY pt.data_criacao DESC;
-        `;
+        SELECT
+        pt.id_post AS "idPost",
+        pt.titulo,
+        pt.conteudo AS "descricao",
+        p.nome_pessoa AS "autor",
+        pt.data_criacao AS "dataCriacao"
+        FROM post pt
+        INNER JOIN pessoa p
+        ON p.id_pessoa = pt.criado_por
+        WHERE pt.is_deleted = FALSE
+        AND (pt.titulo ILIKE $1 OR pt.conteudo ILIKE $1)
+        ORDER BY pt.data_criacao DESC
+        LIMIT $2 OFFSET $3;
+         `;
 
-        const result = await pool.query(
-            query,
-            [`%${text}%`]
-        );
+        const countQuery = `
+        SELECT COUNT(*) AS total
+        FROM post pt
+        WHERE pt.is_deleted = FALSE
+        AND (pt.titulo ILIKE $1 OR pt.conteudo ILIKE $1);
+    `;
 
-        return result.rows.map(
-            PostMapper.toModel
-        );
+    const result = await pool.query(query, [`%${text}%`, limit, offset]);
+    const countResult = await pool.query(countQuery, [`%${text}%`]);
 
+    return {
+    data: result.rows,
+    total: Number(countResult.rows[0].total),
+    };
+}
+
+ async atualizarComentario(idComentario, conteudo) {
+    const comentarioExistente = await this.comentarioRepository.buscarPorId(idComentario);
+    if (!comentarioExistente) {
+      throw new AppError("Comentário não encontrado", 404);
     }
+    return await this.comentarioRepository.atualizarComentario(idComentario, conteudo);
+  }
+
+  async removerComentario(idComentario) {
+    const comentarioExistente = await this.comentarioRepository.buscarPorId(idComentario);
+    if (!comentarioExistente) {
+      throw new AppError("Comentário não encontrado", 404);
+    }
+    return await this.comentarioRepository.removerComentario(idComentario);
+  }
 
 }
 

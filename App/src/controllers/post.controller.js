@@ -8,20 +8,22 @@ const {
 
 class PostController {
 
-    async listar(req, res, next) {
+     async listar(req, res, next) {
         try {
-            const posts = await postService.listar();
+             const page = parseInt(req.query.page) || 1;
+             const limit = parseInt(req.query.limit) || 10; 
 
-            return res.status(200).json({
-                success: true,
-                data: posts
-            });
+            const result = await postService.listar(page, limit);   
 
-        } catch(error) {
+             return res.status(200).json({
+              success: true,
+             ...result,
+             });
+            } 
+        catch (error) {
             next(error);
-
-        }
-    }
+            }
+         }
 
     async buscarPorId(req, res, next) {
         try {
@@ -48,26 +50,21 @@ class PostController {
     }
 
     async search(req, res, next) {
-
         try {
+        const { text, page = 1, limit = 10 } = req.query;
 
-            const {text} = req.query;
+        const result = await postService.search(text, Number(page), Number(limit));
 
-            const posts = await postService.search(
-                text
-            );
-
-            return res.status(200).json({
-                success: true,
-                data: posts
-
-            });
-
-        } catch(error) {
-            next(error);
-        }
-
-    }
+        return res.status(200).json({
+        success: true,
+        data: result.data,
+        total: result.total
+        });
+     } 
+        catch (error) {
+         next(error);
+  }
+}
 
     async criar(req, res, next) {
 
@@ -127,6 +124,49 @@ class PostController {
             next(error);
         }
     }
+
+    async adicionarComentario(req, res, next) {
+        try {
+            const { id } = req.params; // id do post
+            const { conteudo, idUsuario } = req.body;
+
+            const comentario = await postService.adicionarComentario(id, conteudo, idUsuario);
+
+            return res.status(201).json({
+            success: true,
+            data: comentario
+         });
+        } catch (error) {
+            next(error);
+            }
+        }
+async atualizarComentario(req, res, next) {
+    try {
+      const { idComentario } = req.params;
+      const { conteudo } = req.body;
+
+      const comentario = await postService.atualizarComentario(idComentario, conteudo);
+
+      return res.status(200).json({
+        success: true,
+        data: comentario
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async removerComentario(req, res, next) {
+    try {
+      const { idComentario } = req.params;
+
+      await postService.removerComentario(idComentario);
+
+      return res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 

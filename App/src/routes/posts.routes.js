@@ -1,47 +1,51 @@
 const validate = require('../middlewares/validate.middleware');
-
 const express = require('express');
 
 const router = express.Router();
-
 const postController = require('../controllers/post.controller');
 
 const {
-    createPostSchema,
-    updatePostSchema
+  createPostSchema,
+  updatePostSchema
 } = require('../schemas/post.schema');
 
 router.get(
-    '/',
-    postController.listar
+  '/',
+  postController.listar
 );
 
 router.get(
-
-    '/search',
-    postController.search
+  '/search',
+  postController.search
 );
 
 router.get(
-    '/:id',
-    postController.buscarPorId
+  '/:id',
+  postController.buscarPorId
 );
 
 router.post(
-    '/',
-    validate(createPostSchema),
-    postController.criar
+  '/',
+  validate(createPostSchema),
+  postController.criar
 );
 
 router.put(
-    '/:id',
-    validate(createPostSchema),
-    postController.atualizar
+  '/:id',
+  validate(updatePostSchema),
+  postController.atualizar
 );
 
 router.delete(
-    '/:id',
-    postController.remover
+  '/:id',
+  postController.remover
 );
 
+router.post(
+  '/:id/comentarios',
+  postController.adicionarComentario
+);
+router.put('/comentarios/:idComentario', postController.atualizarComentario);
+
+router.delete('/comentarios/:idComentario', postController.removerComentario);
 module.exports = router;

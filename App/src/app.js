@@ -6,6 +6,7 @@ const { errorHandler } = require('./middlewares/error-handler');
 
 const pessoaRoutes = require('./routes/pessoas.routes');
 const postRoutes = require('./routes/posts.routes');
+const authRoutes = require('./routes/auth.routes');
 
 const {
     swaggerUi,
@@ -32,6 +33,7 @@ app.use('/api/pessoas', pessoaRoutes);
 
 app.use('/api/posts', postRoutes);
 
+app.use('/api/auth', authRoutes);
 
 
 app.use(errorHandler);
